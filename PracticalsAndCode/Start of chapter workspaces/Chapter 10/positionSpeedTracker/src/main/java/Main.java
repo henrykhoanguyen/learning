@@ -2,10 +2,7 @@ import akka.Done;
 import akka.NotUsed;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
-import akka.stream.ClosedShape;
-import akka.stream.FlowShape;
-import akka.stream.SinkShape;
-import akka.stream.SourceShape;
+import akka.stream.*;
 import akka.stream.javadsl.*;
 
 import java.time.Duration;
@@ -88,8 +85,14 @@ public class Main {
                 GraphDSL.create( sink, (builder, out) -> {
                     SourceShape<Integer> sourceShape = builder.add(source);
 
+
+                    UniformFanOutShape<Integer, Integer> balance = builder.add(Balance.create(8, true));
+                    UniformFanInShape<VehiclePositionMessage, VehiclePositionMessage> merge = builder.add(Merge.create(8));
+
                     FlowShape<Integer, Integer> vehicleIdShape = builder.add(transformIdFlow);
-                    FlowShape<Integer, VehiclePositionMessage> vehiclePositionShape = builder.add(getPositionFlow.async());
+
+//                    FlowShape<Integer, VehiclePositionMessage> vehiclePositionShape = builder.add(getPositionFlow.async());
+
                     FlowShape<VehiclePositionMessage, VehicleSpeed> vehicleSpeedShape = builder.add(getSpeedFlow);
                     FlowShape<VehicleSpeed, VehicleSpeed> speedFilterShape = builder.add(speedFilterFlow);
 
@@ -97,14 +100,19 @@ public class Main {
                     // SinkShape<VehicleSpeed> resultShape = builder.add(sink);
                     builder.from(sourceShape)
                             .via(vehicleIdShape)
-                            .via(vehiclePositionShape);
+                            .viaFanOut(balance);
 
-                    builder.from(vehicleSpeedShape)
+                    for (int i = 0; i < 8; i++) {
+                        builder.from(balance)
+                                .via(builder.add(getPositionFlow.async()))
+                                .toFanIn(merge);
+                    }
+
+
+                    builder.from(merge)
+                            .via(vehicleSpeedShape)
                             .via(speedFilterShape)
                             .to(out);
-
-                    builder.from(vehiclePositionShape)
-                            .via(vehicleSpeedShape);
 
                     return ClosedShape.getInstance();
                 })
