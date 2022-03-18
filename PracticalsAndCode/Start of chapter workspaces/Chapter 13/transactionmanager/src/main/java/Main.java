@@ -4,6 +4,8 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.stream.ClosedShape;
 import akka.stream.FanInShape2;
+import akka.stream.Graph;
+import akka.stream.SourceShape;
 import akka.stream.javadsl.*;
 
 import java.math.BigDecimal;
@@ -103,6 +105,8 @@ public class Main {
                     return ClosedShape.getInstance();
                 })
         );
+
+        Graph<SourceShape<Transaction>, NotUsed> sourcePartialGraph = GraphDSL.create();
 
         ActorSystem actorSystem = ActorSystem.create(Behaviors.empty(), "actorSystem");
         graph.run(actorSystem);
