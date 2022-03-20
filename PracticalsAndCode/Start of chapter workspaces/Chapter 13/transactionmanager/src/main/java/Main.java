@@ -2,12 +2,10 @@ import akka.Done;
 import akka.NotUsed;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
-import akka.stream.ClosedShape;
-import akka.stream.FanInShape2;
-import akka.stream.Graph;
-import akka.stream.SourceShape;
+import akka.stream.*;
 import akka.stream.javadsl.*;
 
+import javax.annotation.processing.Completion;
 import java.math.BigDecimal;
 
 import java.time.Duration;
@@ -74,9 +72,42 @@ public class Main {
                     accounts.get(trans.getAccountNumber()).getBalance());
         });
 
-        RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
-                GraphDSL.create(Sink.foreach(System.out::println), (builder, out) -> {
+        // Old Runnable Graph
+//        RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
+//                GraphDSL.create(Sink.foreach(System.out::println), (builder, out) -> {
+//
+//                    FanInShape2<Transaction, Integer, Transaction> assignTransactionIDs =
+//                            builder.add(ZipWith.create( (trans, id) -> {
+//                                trans.setUniqueId(id);
+//                                return trans;
+//                            }));
+//
+//                    builder.from(builder.add(source))
+//                            .via(builder.add(generateTransfer.alsoTo(transferLogger)))
+//                            .via(builder.add(getTransactionsFromTransfer))
+//                            .toInlet(assignTransactionIDs.in0());
+//
+//                    builder.from(builder.add(transactionIDsSource))
+//                            .toInlet(assignTransactionIDs.in1());
+//
+//                    builder.from(assignTransactionIDs.out())
+//                            .via(builder.add(Flow.of(Transaction.class)
+//                                    .divertTo(rejectedTransactionsSink, trans -> {
+//                                        Account account = accounts.get(trans.getAccountNumber());
+//                                        BigDecimal forecastBalance = account.getBalance().add(trans.getAmount());
+//
+//                                        return (forecastBalance.compareTo(BigDecimal.ZERO) < 0);
+//                                    })))
+//                            .via(builder.add(applyTransactionsToAccounts))
+//                            .to(out);
+//
+//                    return ClosedShape.getInstance();
+//                })
+//        );
 
+        // New RunnableGraph
+        Graph<SourceShape<Transaction>, NotUsed> sourcePartialGraph = GraphDSL.create(
+                builder -> {
                     FanInShape2<Transaction, Integer, Transaction> assignTransactionIDs =
                             builder.add(ZipWith.create( (trans, id) -> {
                                 trans.setUniqueId(id);
@@ -91,24 +122,42 @@ public class Main {
                     builder.from(builder.add(transactionIDsSource))
                             .toInlet(assignTransactionIDs.in1());
 
-                    builder.from(assignTransactionIDs.out())
-                            .via(builder.add(Flow.of(Transaction.class)
-                                    .divertTo(rejectedTransactionsSink, trans -> {
-                                        Account account = accounts.get(trans.getAccountNumber());
-                                        BigDecimal forecastBalance = account.getBalance().add(trans.getAmount());
+                    return SourceShape.of(assignTransactionIDs.out());
 
-                                        return (forecastBalance.compareTo(BigDecimal.ZERO) < 0);
-                                    })))
+                }
+        );
+
+        Graph<SinkShape<Transaction>, CompletionStage<Done>> sinkPartialGraph = GraphDSL.create(
+                Sink.foreach(System.out::println), (builder, out) -> {
+                    FlowShape<Transaction, Transaction> entryFlow = builder.add(Flow.of(Transaction.class)
+                            .divertTo(rejectedTransactionsSink, trans -> {
+                                Account account = accounts.get(trans.getAccountNumber());
+                                BigDecimal forecastBalance = account.getBalance().add(trans.getAmount());
+
+                                return (forecastBalance.compareTo(BigDecimal.ZERO) < 0);
+                            }));
+
+                    builder.from(entryFlow)
                             .via(builder.add(applyTransactionsToAccounts))
                             .to(out);
 
-                    return ClosedShape.getInstance();
-                })
+                    return SinkShape.of(entryFlow.in());
+                }
         );
 
-        Graph<SourceShape<Transaction>, NotUsed> sourcePartialGraph = GraphDSL.create();
+//        RunnableGraph<CompletionStage<Done>> graph = RunnableGraph.fromGraph(
+//                GraphDSL.create(sinkPartialGraph, (builder, out) -> {
+//                    builder.from(builder.add(sourcePartialGraph))
+//                            .to(out);
+//
+//                    return ClosedShape.getInstance();
+//                })
+//        );
 
         ActorSystem actorSystem = ActorSystem.create(Behaviors.empty(), "actorSystem");
-        graph.run(actorSystem);
+//        graph.run(actorSystem);
+
+        Source<Transaction, NotUsed> newSource = Source.fromGraph(sourcePartialGraph);
+        newSource.to(sinkPartialGraph).run(actorSystem);
     }
 }
