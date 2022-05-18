@@ -66,8 +66,8 @@ public class ManagerBehavior extends AbstractBehavior<ManagerBehavior.Command> {
                 })
                 .onMessage(ResultCommand.class , command -> {
                     primes.add(command.getPrime());
-                    System.out.println("I have received " + primes.size() + " prime numbers");
-                    if (primes.size() == 20) {
+                    System.out.println("I have received " + primes.size() + " primes number");
+                    if (primes.size() == 20){
                         primes.forEach(System.out::println);
                     }
                     return this;
