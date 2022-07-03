@@ -80,6 +80,9 @@ public class CustomerBehavior extends AbstractBehavior<CustomerBehavior.Command>
                 })
                 .onMessage(GetCustomerCommand.class, message -> {
                     Customer customer = customers.get(message.getCustomerId());
+                    if (customer == null){
+                        customer = new Customer(0, "", "", 0, false);
+                    }
                     message.getSender().tell(customer);
                     return Behaviors.same();
                 })
