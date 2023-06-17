@@ -1,0 +1,15 @@
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/bin/Debug/net7.0/HelloWorld
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/bin/Debug/net7.0/HelloWorld.deps.json
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/bin/Debug/net7.0/HelloWorld.runtimeconfig.json
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/bin/Debug/net7.0/HelloWorld.dll
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/bin/Debug/net7.0/HelloWorld.pdb
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.csproj.AssemblyReference.cache
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.GeneratedMSBuildEditorConfig.editorconfig
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.AssemblyInfoInputs.cache
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.AssemblyInfo.cs
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.csproj.CoreCompileInputs.cache
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.dll
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/refint/HelloWorld.dll
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.pdb
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/HelloWorld.genruntimeconfig.cache
+/Users/khoanguyen/Downloads/learning/dotnet-course-code/HelloWorld/obj/Debug/net7.0/ref/HelloWorld.dll
